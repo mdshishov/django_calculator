@@ -20,14 +20,15 @@
             const csrftoken = document.getElementById('csrf_token').content;
 
             async function clearHistory() {
-                await fetch("{% url 'history' %}", {
+                const response = await fetch("{% url 'history' %}", {
                     headers: {
                         'X-CSRFToken': csrftoken,
                     },
                     method: 'DELETE',
                 })
 
-                location.reload();
+                const html = await response.text();
+                document.documentElement.innerHTML = html;
             }
         </script>
     {% else %}
