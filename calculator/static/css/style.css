@@ -1,0 +1,20 @@
+.error-text {
+    color: red;
+}
+
+.result-text{
+    font-weight: bold;
+    font-size: 2em;
+}
+
+.result-container {
+    text-align: right;
+}
+
+.invalid {
+    border: solid 2px red;
+}
+
+.hidden {
+    display: none;
+}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %} История вычислений {% endblock %}
+
+{% block content %}
+    {% load static %}
+
+    <meta id="csrf_token" content="{{ csrf_token }}">
+
+    <h1>История</h1>
+
+    {% if history %}
+        <ul>
+        {% for item in history %}
+            <li>{{ item }}</li>
+        {% endfor %}
+        </ul>
+        <button type="button" onclick="clearHistory()">Очистить историю</button>
+        <script>
+            const csrftoken = document.getElementById('csrf_token').content;
+
+            async function clearHistory() {
+                await fetch("{% url 'history' %}", {
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    },
+                    method: 'DELETE',
+                })
+
+                location.reload();
+            }
+        </script>
+    {% else %}
+        Тут пока ничего нет
+    {% endif %}
+{% endblock %}

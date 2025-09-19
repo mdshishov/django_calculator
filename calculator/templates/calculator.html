@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %} Калькулятор {% endblock %}
+
+{% block content %}
+    {% load static %}
+
+    <meta id="csrf_token" content="{{ csrf_token }}">
+
+    <h1>Калькулятор</h1>
+
+    <form method="post" action="{% url 'calculator' %}" id="calculator_form">
+        <input type="text" name="first" value="">
+        <select name="operator">
+            <option value="+" selected>+</option>
+            <option value="-">-</option>
+            <option value="*">*</option>
+            <option value="/">/</option>
+            <option value="^">^</option>
+            <option value="sqrt">sqrt</option>
+        </select>
+        <input type="text" name="second" value="">
+        <button type="submit" name="submit_btn" disabled>Вычислить</button>
+    </form>
+
+    <div id="error" class="error-text hidden"></div>
+    <div id="result_container" class="hidden">
+        <div id="operation"></div>
+        <div id="result" class="result-text"></div>
+    </div>
+
+    <script src="{% static 'js/calculator.js' %}" defer></script>
+{% endblock %}
