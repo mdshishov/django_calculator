@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <style>
+        .vertical-input-group .input-group:first-child {
+            padding-bottom: 0;
+        }
+        .vertical-input-group .input-group:first-child * {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .vertical-input-group .input-group:last-child {
+            padding-top: 0;
+        }
+        .vertical-input-group .input-group:last-child * {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+        .vertical-input-group .input-group:not(:last-child):not(:first-child) {
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .vertical-input-group .input-group:not(:last-child):not(:first-child) * {
+            border-radius: 0;
+        }
+        .vertical-input-group .input-group:not(:first-child) * {
+            border-top: 0;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        form {
+            width: 100%;
+            max-width: 250px;
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-center bg-light">
+<form id="form" class="form-signin">
+    {% csrf_token %}
+    <h1 class="h2 mb-4">Регистрация</h1>
+    <div class="vertical-input-group mb-4">
+        <div class="input-group">
+            <input type="text" name="username" class="form-control" placeholder="Логин" required autofocus>
+        </div>
+        <div class="input-group">
+            <input type="password" name="password" class="form-control" placeholder="Пароль" required>
+        </div>
+    </div>
+    <p class="text-danger hidden" id="error" >Ошибка</p>
+    <button id="button" type="submit" class="btn btn-primary btn-block mb-2">Создать аккаунт</button>
+    <a href="{% url 'login' %}">Войти</a>
+</form>
+
+<script>
+    const form = document.getElementById('form')
+    const error = document.getElementById('error')
+    const button = document.getElementById('button')
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault()
+
+        error.classList.add('hidden')
+        button.disabled = true
+
+
+        const csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value
+        const formData = new FormData(form)
+
+
+        try {
+            const response = await fetch('{% url 'register' %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                },
+                body: formData,
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                localStorage.setItem('lastUser', data.user.username)
+                window.location.href = '{% url 'login' %}'
+            } else {
+                error.textContent = data.error
+                error.classList.remove('hidden')
+            }
+        }
+        catch (error) {
+        }
+
+        button.disabled = false
+    });
+</script>
+</body>
+</html>

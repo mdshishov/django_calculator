@@ -1,24 +1,63 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %} Базовый шаблон {% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>{% block title %}Калькулятор{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <style>
+        {% block style %}{% endblock %}
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    {% block navbar %}
-    <nav>
-        <ul>
-            <li><a href="{% url 'calculator' %}">Калькулятор</a></li>
-            <li><a href="{% url 'history' %}">История</a></li>
-        </ul>
-    </nav>
+<div class="bg-primary p-2">
+    {% block sidebar %}
+        <nav class="nav">
+            <button class="btn btn-link text-white" onClick="goTo('{% url 'index' %}')">Калькулятор</button></li>
+            <button class="btn btn-link text-white" onClick="goTo('{% url 'operations_list' %}')">История</button></li>
+            <button class="btn btn-link text-white" onClick="handleLogout()">Выйти</button></li>
+        </nav>
     {% endblock %}
+</div>
+<div style="padding:20px;">
+    {% block content %}{% endblock %}
+</div>
 
-    <div id="content">
-        {% block content %}{% endblock %}
-    </div>
+<script>
+    async function goTo(url) {
+        const access = localStorage.getItem('accessToken')
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${access}`
+            },
+        })
+
+        const html = await response.text()
+        document.open()
+        for (const key in window) {
+            if (window.hasOwnProperty(key) &&
+                !key.startsWith('') && // Avoid deleting built-ins
+                typeof window[key] !== 'function') { // Avoid native functions
+                delete window[key];
+            }
+        }
+        document.write(html)
+        document.close()
+        window.history.pushState({}, '', url)
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        window.location.href = '{% url 'login' %}'
+    }
+
+</script>
+
 </body>
 </html>

@@ -1,33 +1,105 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %} Калькулятор {% endblock %}
+{% block title %}Калькулятор{% endblock %}
+
+{% block style %}
+.vertical-input-group .input-group:first-child {
+padding-bottom: 0;
+}
+.vertical-input-group .input-group:first-child * {
+border-bottom-left-radius: 0;
+border-bottom-right-radius: 0;
+}
+.vertical-input-group .input-group:last-child {
+padding-top: 0;
+}
+.vertical-input-group .input-group:last-child * {
+border-top-left-radius: 0;
+border-top-right-radius: 0;
+}
+.vertical-input-group .input-group:not(:last-child):not(:first-child) {
+padding-top: 0;
+padding-bottom: 0;
+}
+.vertical-input-group .input-group:not(:last-child):not(:first-child) * {
+border-radius: 0;
+}
+.vertical-input-group .input-group:not(:first-child) * {
+border-top: 0;
+}
+
+form {
+width: 100%;
+max-width: 250px;
+{% endblock %}
 
 {% block content %}
-    {% load static %}
-
-    <meta id="csrf_token" content="{{ csrf_token }}">
-
-    <h1>Калькулятор</h1>
-
-    <form method="post" action="{% url 'calculator' %}" id="calculator_form">
-        <input type="text" name="first" value="">
-        <select name="operator">
-            <option value="+" selected>+</option>
-            <option value="-">-</option>
-            <option value="*">*</option>
-            <option value="/">/</option>
-            <option value="^">^</option>
-            <option value="sqrt">sqrt</option>
-        </select>
-        <input type="text" name="second" value="">
-        <button type="submit" name="submit_btn" disabled>Вычислить</button>
-    </form>
-
-    <div id="error" class="error-text hidden"></div>
-    <div id="result_container" class="hidden">
-        <div id="operation"></div>
-        <div id="result" class="result-text"></div>
+<h1 class="h2 mb-4">Калькулятор</h1>
+<form id="form">
+    {% csrf_token %}
+    <div class="vertical-input-group mb-4">
+        <div class="input-group">
+            <input type="number" name="operand1" class="form-control" placeholder="Первое число" required autofocus>
+        </div>
+        <div class="input-group">
+            <select class="form-control" name="operator">
+                <option value="add">+</option>
+                <option value="sub">-</option>
+                <option value="mul">*</option>
+                <option value="div">/</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <input type="number" name="operand2" class="form-control" placeholder="Второе число" required>
+        </div>
     </div>
+    <p class="text-danger hidden" id="error">Ошибка</p>
+    <button id="button" type="submit" class="btn btn-primary btn-block mb-2">Вычислить</button>
+</form>
+<h1 id="result" class="hidden"></h1>
+<script>
+    form = document.getElementById('form')
+    error = document.getElementById('error')
+    button = document.getElementById('button')
 
-    <script src="{% static 'js/calculator.js' %}" defer></script>
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault()
+
+        error.classList.add('hidden')
+        button.disabled = true
+
+        const csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value
+        const formData = new FormData(form)
+        const access = localStorage.getItem('accessToken')
+
+        try {
+            const response = await fetch('{% url 'calculate' %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    Authorization: `Bearer ${access}`,
+                },
+                body: formData,
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+              const result = document.getElementById('result')
+              result.classList.remove('hidden')
+              result.textContent = data.result
+
+            } else {
+                result.classList.add('hidden')
+                error.textContent = data.error
+                error.classList.remove('hidden')
+            }
+
+        }
+        catch (error) {
+        }
+
+        button.disabled = false
+    })
+</script>
 {% endblock %}

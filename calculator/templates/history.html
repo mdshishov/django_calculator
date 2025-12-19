@@ -1,37 +1,72 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %} История вычислений {% endblock %}
+{% block title %}Калькулятор{% endblock %}
+
+{% block style %}
+.vertical-input-group .input-group:first-child {
+padding-bottom: 0;
+}
+.vertical-input-group .input-group:first-child * {
+border-bottom-left-radius: 0;
+border-bottom-right-radius: 0;
+}
+.vertical-input-group .input-group:last-child {
+padding-top: 0;
+}
+.vertical-input-group .input-group:last-child * {
+border-top-left-radius: 0;
+border-top-right-radius: 0;
+}
+.vertical-input-group .input-group:not(:last-child):not(:first-child) {
+padding-top: 0;
+padding-bottom: 0;
+}
+.vertical-input-group .input-group:not(:last-child):not(:first-child) * {
+border-radius: 0;
+}
+.vertical-input-group .input-group:not(:first-child) * {
+border-top: 0;
+}
+
+form {
+width: 100%;
+max-width: 250px;
+
+.hidden {
+display: none;
+}
+{% endblock %}
 
 {% block content %}
-    {% load static %}
-
-    <meta id="csrf_token" content="{{ csrf_token }}">
-
-    <h1>История</h1>
-
-    {% if history %}
-        <ul>
-        {% for item in history %}
-            <li>{{ item }}</li>
-        {% endfor %}
-        </ul>
-        <button type="button" onclick="clearHistory()">Очистить историю</button>
-        <script>
-            const csrftoken = document.getElementById('csrf_token').content;
-
-            async function clearHistory() {
-                const response = await fetch("{% url 'history' %}", {
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                    },
-                    method: 'DELETE',
-                })
-
-                const html = await response.text();
-                document.documentElement.innerHTML = html;
-            }
-        </script>
-    {% else %}
-        Тут пока ничего нет
-    {% endif %}
+<h1 class="h2 mb-4">История</h1>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">First</th>
+      <th scope="col">Last</th>
+      <th scope="col">Handle</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">1</th>
+      <td>Mark</td>
+      <td>Otto</td>
+      <td>@mdo</td>
+    </tr>
+    <tr>
+      <th scope="row">2</th>
+      <td>Jacob</td>
+      <td>Thornton</td>
+      <td>@fat</td>
+    </tr>
+    <tr>
+      <th scope="row">3</th>
+      <td>John</td>
+      <td>Doe</td>
+      <td>@social</td>
+    </tr>
+  </tbody>
+</table>
 {% endblock %}
