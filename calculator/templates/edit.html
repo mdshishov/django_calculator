@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Операция #{{ operation.id }}{% endblock %}
+
+{% block style %}
+.vertical-input-group .input-group:first-child {
+padding-bottom: 0;
+}
+.vertical-input-group .input-group:first-child * {
+border-bottom-left-radius: 0;
+border-bottom-right-radius: 0;
+}
+.vertical-input-group .input-group:last-child {
+padding-top: 0;
+}
+.vertical-input-group .input-group:last-child * {
+border-top-left-radius: 0;
+border-top-right-radius: 0;
+}
+.vertical-input-group .input-group:not(:last-child):not(:first-child) {
+padding-top: 0;
+padding-bottom: 0;
+}
+.vertical-input-group .input-group:not(:last-child):not(:first-child) * {
+border-radius: 0;
+}
+.vertical-input-group .input-group:not(:first-child) * {
+border-top: 0;
+}
+
+form {
+width: 100%;
+max-width: 250px;
+{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-4">Операция #{{ operation.id }}</h1>
+<p>{{operation.user.username}}</p>
+<form id="form">
+    {% csrf_token %}
+    <div class="vertical-input-group mb-4">
+        <div class="input-group">
+            <input type="number" name="operand1" class="form-control" placeholder="Первое число" required autofocus
+                   value="{{operation.operand1}}">
+        </div>
+        <div class="input-group">
+            <select class="form-control" name="operator">
+                <option value="add" {% if operation.operator == 'add' %}selected{% endif %}>+</option>
+                <option value="sub" {% if operation.operator == 'sub' %}selected{% endif %}>-</option>
+                <option value="mul" {% if operation.operator == 'mul' %}selected{% endif %}>*</option>
+                <option value="div" {% if operation.operator == 'div' %}selected{% endif %}>/</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <input type="number" name="operand2" class="form-control" placeholder="Второе число" required
+                   value="{{operation.operand2}}">
+        </div>
+    </div>
+    <p class="text-danger hidden" id="error">Ошибка</p>
+    <button id="button" type="submit" class="btn btn-primary btn-block mb-2">Сохранить</button>
+</form>
+<script>
+    form = document.getElementById('form')
+    error = document.getElementById('error')
+    button = document.getElementById('button')
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault()
+
+        error.classList.add('hidden')
+        button.disabled = true
+
+        const csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value
+        const formData = new FormData(form)
+        const access = localStorage.getItem('accessToken')
+
+        try {
+            const response = await fetch('{% url 'operations_detail' id=operation.id %}', {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    Authorization: `Bearer ${access}`,
+                },
+                body: formData,
+            })
+
+            if (response.ok) {
+
+                const response = await fetch('{% url 'operations_list' %}', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${access}`
+                    },
+                })
+
+                const html = await response.text()
+                document.open()
+                for (const key in window) {
+                    if (window.hasOwnProperty(key) &&
+                        !key.startsWith('') &&
+                        typeof window[key] !== 'function') {
+                        delete window[key];
+                    }
+                }
+                document.write(html)
+                document.close()
+                window.history.pushState({}, '', '{% url 'operations_list' %}')
+
+            } else {
+                const data = await response.json()
+                error.textContent = data.error
+                error.classList.remove('hidden')
+            }
+
+        }
+        catch (error) {
+        }
+
+        button.disabled = false
+    })
+</script>
+{% endblock %}

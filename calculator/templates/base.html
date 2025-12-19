@@ -41,8 +41,8 @@
         document.open()
         for (const key in window) {
             if (window.hasOwnProperty(key) &&
-                !key.startsWith('') && // Avoid deleting built-ins
-                typeof window[key] !== 'function') { // Avoid native functions
+                !key.startsWith('') &&
+                typeof window[key] !== 'function') {
                 delete window[key];
             }
         }

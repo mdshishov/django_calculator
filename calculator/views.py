@@ -1,13 +1,14 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render, redirect
 
+from .mixins import RedirectToLoginMixin
 from .models import Operation
 from .permissions import AllowNonAuthorized
 from .serializers import UserSerializer, OperationSerializer
@@ -73,17 +74,15 @@ class UserLoginView(APIView):
         })
 
 
-class CalculatorView(APIView):
+class CalculatorView(RedirectToLoginMixin, APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         return render(request, 'calculator.html')
 
-    def handle_exception(self, exc):
-        return redirect('login')
 
-class CalculateView(APIView):
+class CalculateView(RedirectToLoginMixin, APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
@@ -93,10 +92,10 @@ class CalculateView(APIView):
             operation = serializer.save()
 
             return Response({
-                    'operator': operation.operator,
-                    'operand1': operation.operand1,
-                    'operand2': operation.operand2,
-                    'result': operation.result,
+                'operator': operation.operator,
+                'operand1': operation.operand1,
+                'operand2': operation.operand2,
+                'result': operation.result,
             }, status=status.HTTP_201_CREATED)
 
         return Response(
@@ -104,10 +103,8 @@ class CalculateView(APIView):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    def handle_exception(self, exc):
-        return redirect('login')
 
-class OperationsListView(APIView):
+class OperationsListView(RedirectToLoginMixin, APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
@@ -133,5 +130,53 @@ class OperationsListView(APIView):
             'is_superuser': self.request.user.is_superuser,
         })
 
-    def handle_exception(self, exc):
-        return redirect('login')
+
+class OperationsDetailView(RedirectToLoginMixin, APIView):
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated, IsAdminUser)
+
+    def delete(self, request, id):
+        try:
+            operation = Operation.objects.get(id=id)
+        except Operation.DoesNotExist:
+            return Response(
+                {'error': 'Операция не найдена'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        operation.delete()
+        return Response({'success': True})
+
+    def patch(self, request, id):
+        try:
+            operation = Operation.objects.get(id=id)
+        except Operation.DoesNotExist:
+            return Response(
+                {'error': 'Операция не найдена'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = OperationSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'success': True})
+
+        return Response(
+            {'error': list(serializer.errors.values())[0]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class OperationEditFormView(RedirectToLoginMixin, APIView):
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, id):
+        try:
+            operation = Operation.objects.get(id=id)
+            return render(request, 'edit.html', {'operation': operation})
+        except Operation.DoesNotExist:
+            return Response(
+                {'error': 'Операция не найдена'},
+                status=status.HTTP_404_NOT_FOUND,
+            )

@@ -110,6 +110,13 @@
                 const html = await response.text()
 
                 document.open()
+                for (const key in window) {
+                    if (window.hasOwnProperty(key) &&
+                        !key.startsWith('') &&
+                        typeof window[key] !== 'function') {
+                        delete window[key];
+                    }
+                }
                 document.write(html)
                 document.close()
                 window.history.pushState({}, '', '{% url 'index' %}')

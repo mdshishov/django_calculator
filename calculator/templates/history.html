@@ -47,6 +47,8 @@ display: none;
         <th scope="col">Дата</th>
         {% if is_superuser %}
         <th scope="col">Пользователь</th>
+        <th scope="col"></th>
+        <th scope="col"></th>
         {% endif %}
     </tr>
     </thead>
@@ -58,9 +60,46 @@ display: none;
         <td>{{ operation.created_at }}</td>
         {% if is_superuser %}
         <td>{{ operation.user }}</td>
+        <td><button class="btn btn-primary" onClick="goTo('{% url 'operations_edit' id=operation.id %}')">Изменить</button></td>
+        <td><button class="btn btn-danger" onClick="handleDelete('{% url 'operations_detail' id=operation.id %}')">Удалить</button></td>
         {% endif %}
     </tr>
     {% endfor %}
     </tbody>
 </table>
+
+<script>
+    async function handleDelete(url) {
+        const access = localStorage.getItem('accessToken')
+
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${access}`,
+            },
+        })
+
+        if (response.ok) {
+            const response = await fetch('{% url 'operations_list' %}', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${access}`
+                },
+            })
+
+            const html = await response.text()
+            document.open()
+            for (const key in window) {
+                if (window.hasOwnProperty(key) &&
+                    !key.startsWith('') &&
+                    typeof window[key] !== 'function') {
+                    delete window[key];
+                }
+            }
+            document.write(html)
+            document.close()
+            window.history.pushState({}, '', '{% url 'operations_list' %}')
+        }
+    }
+</script>
 {% endblock %}
