@@ -40,33 +40,27 @@ display: none;
 {% block content %}
 <h1 class="h2 mb-4">История</h1>
 <table class="table">
-  <thead>
+    <thead>
     <tr>
-      <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
+        <th scope="col">ID</th>
+        <th scope="col">Операция</th>
+        <th scope="col">Дата</th>
+        {% if is_superuser %}
+        <th scope="col">Пользователь</th>
+        {% endif %}
     </tr>
-  </thead>
-  <tbody>
+    </thead>
+    <tbody>
+    {% for operation in operations %}
     <tr>
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
+        <th scope="row">{{ operation.id }}</th>
+        <td>{{ operation.operation }}</td>
+        <td>{{ operation.created_at }}</td>
+        {% if is_superuser %}
+        <td>{{ operation.user }}</td>
+        {% endif %}
     </tr>
-    <tr>
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-    </tr>
-    <tr>
-      <th scope="row">3</th>
-      <td>John</td>
-      <td>Doe</td>
-      <td>@social</td>
-    </tr>
-  </tbody>
+    {% endfor %}
+    </tbody>
 </table>
 {% endblock %}

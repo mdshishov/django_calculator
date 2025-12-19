@@ -8,6 +8,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render, redirect
 
+from .models import Operation
 from .permissions import AllowNonAuthorized
 from .serializers import UserSerializer, OperationSerializer
 from django.shortcuts import render
@@ -112,12 +113,23 @@ class OperationsListView(APIView):
 
     def get(self, request):
         if self.request.user.is_superuser:
-            operations = User.objects.all()
+            operations = Operation.objects.all()
         else:
-            operations = User.objects.filter(user=self.request.user)
+            operations = Operation.objects.filter(user=self.request.user).all()
+
+        operations_list = [
+            {
+                'id': op.id,
+                'operation': str(op),
+                'operator': op.operator,
+                'created_at': op.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'user': op.user.username
+            }
+            for op in operations
+        ]
 
         return render(request, 'history.html', {
-            'operations': operations,
+            'operations': operations_list,
             'is_superuser': self.request.user.is_superuser,
         })
 
