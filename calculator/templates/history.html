@@ -39,6 +39,12 @@ display: none;
 
 {% block content %}
 <h1 class="h2 mb-4">История</h1>
+<form method="get" id="search-form" class="mb-3">
+    <div class="input-group">
+        <input type="text" class="form-control" name="search" placeholder="Поиск..." value="{{ search_query|default:'' }}">
+        <button class="btn btn-primary" type="submit">Найти</button>
+    </div>
+</form>
 <table class="table">
     <thead>
     <tr>
@@ -69,6 +75,38 @@ display: none;
 </table>
 
 <script>
+    document.getElementById('search-form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+
+        const formData = new FormData(document.getElementById('search-form'))
+        const access = localStorage.getItem('accessToken')
+
+        const searchStr = new URLSearchParams({
+            'search': formData.get('search'),
+        }).toString()
+
+        const response = await fetch('{% url 'operations_list' %}?' + searchStr, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${access}`
+            },
+        })
+
+        const html = await response.text()
+        document.open()
+        for (const key in window) {
+            if (window.hasOwnProperty(key) &&
+                !key.startsWith('') &&
+                typeof window[key] !== 'function') {
+                delete window[key];
+            }
+        }
+        document.write(html)
+        document.close()
+        window.history.pushState({}, '', '{% url 'operations_list' %}?' + searchStr)
+
+    })
+
     async function handleDelete(url) {
         const access = localStorage.getItem('accessToken')
 

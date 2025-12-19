@@ -1,13 +1,12 @@
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.shortcuts import render, redirect
 
+from .filters import OperationFilter
 from .mixins import RedirectToLoginMixin
 from .models import Operation
 from .permissions import AllowNonAuthorized
@@ -114,6 +113,14 @@ class OperationsListView(RedirectToLoginMixin, APIView):
         else:
             operations = Operation.objects.filter(user=self.request.user).all()
 
+        operation_filter = OperationFilter(
+            request.GET,
+            queryset=operations,
+            request=request
+        )
+
+        filtered_operations = operation_filter.qs
+
         operations_list = [
             {
                 'id': op.id,
@@ -122,12 +129,13 @@ class OperationsListView(RedirectToLoginMixin, APIView):
                 'created_at': op.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 'user': op.user.username
             }
-            for op in operations
+            for op in filtered_operations
         ]
 
         return render(request, 'history.html', {
             'operations': operations_list,
             'is_superuser': self.request.user.is_superuser,
+            'search_query': request.GET.get('search', ''),
         })
 
 
